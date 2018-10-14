@@ -84,7 +84,7 @@ class WeChatHandler(object):
         return self.is_msg_type('text') and ((self.input['Content'].split() or [None])[0] in commands)
 
     def url_help(self):
-        return settings.get_url('u/help?a=1')
+        return settings.get_url('u/help')
 
     def url_bind(self):
         return settings.get_url('u/bind', {'openid': self.user.open_id})
@@ -114,7 +114,7 @@ class WeChatLib(object):
 
     logger = logging.getLogger('wechatlib')
     access_token = ''
-    access_token_expire = datetime.datetime.fromtimestamp(1429417200.0)
+    access_token_expire = datetime.datetime.fromtimestamp(86400)
     token = WECHAT_TOKEN
     appid = WECHAT_APPID
     secret = WECHAT_SECRET

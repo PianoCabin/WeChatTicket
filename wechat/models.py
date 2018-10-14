@@ -5,13 +5,13 @@ from codex.baseerror import LogicError
 
 class User(models.Model):
     open_id = models.CharField(max_length=64, unique=True, db_index=True)
-    student_id = models.CharField(max_length=32, unique=True, db_index=True, null=True, blank=True)
+    student_id = models.CharField(max_length=32, unique=True, db_index=True, blank=True, null=True)
 
     @classmethod
     def get_by_openid(cls, openid):
         try:
             return cls.objects.get(open_id=openid)
-        except Exception:
+        except cls.DoesNotExist:
             raise LogicError('User not found')
 
 
@@ -37,7 +37,7 @@ class Activity(models.Model):
 class Ticket(models.Model):
     student_id = models.CharField(max_length=32, db_index=True)
     unique_id = models.CharField(max_length=64, db_index=True, unique=True)
-    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
+    activity = models.ForeignKey(Activity)
     status = models.IntegerField()
 
     STATUS_CANCELLED = 0
