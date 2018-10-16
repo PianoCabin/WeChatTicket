@@ -16,7 +16,7 @@ class UserBind(APIView):
 
     def get(self):
         self.check_input('openid')
-        return User.get_by_openid(self.input['openid']).student_id
+        return str(User.get_by_openid(self.input['openid']).student_id or '')
 
     def post(self):
         self.check_input('openid', 'student_id', 'password')
