@@ -112,7 +112,7 @@ class ActivityDetails(APIView):
             raise LogicError("Activity not found!")
 
         bookedTickets = activity.total_tickets - activity.remain_tickets
-        usedTickets = models.Ticket.objects.filter(status=models.Ticket.STATUS_USED)
+        usedTickets = models.Ticket.objects.filter(status=models.Ticket.STATUS_USED, activity=activity)
         usedTickets = len(usedTickets)
         activity_details = {
             "name": activity.name,
