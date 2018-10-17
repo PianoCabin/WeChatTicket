@@ -3,7 +3,13 @@ from codex.baseview import APIView
 
 from django.contrib import auth
 from wechat import models
+from wechat.models import Activity,Ticket,User
 from django.utils import timezone
+import uuid
+from datetime import datetime
+
+from WeChatTicket import settings
+import os
 
 import datetime
 
@@ -157,13 +163,97 @@ class ActivityDetails(APIView):
             activity.status = status
         elif status == 1:
                 activity.status = status
-        if activity.end_time > timezone.now():
-            activity.start_time = startTime
-            activity.end_time = endTime
-            activity.save()
-            activity = models.Activity.objects.get(id=activity_id)
-        if activity.start_time > timezone.now():
+        if activity.end_time.timestamp() > timezone.now().timestamp():
+            activity.start_time = datetime.strptime(startTime, "%Y-%m-%dT%H:%M:%S.%fZ")
+            activity.end_time = datetime.strptime(endTime, "%Y-%m-%dT%H:%M:%S.%fZ")
+        if activity.start_time.timestamp() > timezone.now().timestamp():
             activity.book_end = bookEnd
         if activity.book_start > timezone.now():
             activity.total_tickets = totalTickets
         activity.save()
+
+
+class UploadImg(APIView):
+    def post(self):
+        if not self.request.user.is_authenticated():
+            raise ValidateError("Please login!")
+        self.check_input("image")
+        try:
+            image = self.input["image"][0]
+            name = str(uuid.uuid1()) + image.name
+            file = open('./static/uimg/' + name, 'wb')
+            for chunk in image.chunks():
+                file.write(chunk)
+            file.close()
+            path = 'uimg/'+name
+            url = os.path.join( settings.CONFIGS["SITE_DOMAIN"],path)
+            return url
+        except Exception as e:
+            raise ValidateError("failed to save Image")
+
+
+class ActivityMenu(APIView):
+
+    def get(self):
+        if not self.request.user.is_authenticated():
+            raise ValidateError("Please login!")
+
+        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED,book_end__gt=datetime.now(),book_start__lt=datetime.now())
+        infos = []
+        for act in actList:
+            info={}
+            info["id"] =act.id
+            info["name"] = act.name
+            info["menuIndex"]=0
+            infos.append(info)
+        infos.reverse()
+        if(len(infos)<5):
+            for i in range(0,len(infos)):
+                infos[i]["menuIndex"] = 5-i
+        else:
+            for i in range(0,len(infos)):
+                infos[i]["menuIndex"] = max(5-i,0)
+        return infos
+
+    def post(self):
+        if not self.request.user.is_authenticated():
+            raise ValidateError("Please login!")
+        idList = self.input
+        for i in Activity.objects.filter(status=Activity.STATUS_PUBLISHED):
+            i.status = 0
+        for id in idList:
+            try:
+                act = Activity.objects.get(id=id)
+                act.status = 1
+                act.save()
+            except Exception as e:
+                raise ValidateError("no such activity")
+        return None
+
+
+class CheckIn(APIView):
+    def post(self):
+        if not self.request.user.is_authenticated():
+            raise ValidateError("Please login!")
+        self.check_input("actId")
+        studentId = self.input.get("studentId")
+        unique_id = self.input.get("ticket")
+        if(studentId == None and unique_id == None):
+            raise ValidateError("info loss")
+        ticket = None
+        try:
+            if(studentId != None):
+                ticket = Ticket.objects.get(studentId = studentId)
+            else:
+                ticket = Ticket.objects.get(unique_id=unique_id)
+        except Exception as e:
+            raise ValidateError("invalid Ticket")
+        if(ticket.status == Ticket.STATUS_USED):
+            raise ValidateError("ticket Used!")
+        if(ticket.status == Ticket.STATUS_CANCELLED):
+            raise ValidateError("ticket Canceled!")
+        info = {}
+        info["ticket"] = ticket.unique_id
+        info["studentId"] = ticket.student_id
+        return info
+
