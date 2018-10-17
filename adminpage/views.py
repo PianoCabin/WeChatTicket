@@ -259,6 +259,8 @@ class CheckIn(APIView):
             raise ValidateError("ticket Used!")
         if(ticket.status == Ticket.STATUS_CANCELLED):
             raise ValidateError("ticket Canceled!")
+        ticket.status=Ticket.STATUS_USED
+        ticket.save()
         info = {}
         info["ticket"] = ticket.unique_id
         info["studentId"] = ticket.student_id
