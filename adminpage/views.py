@@ -3,13 +3,14 @@ from codex.baseview import APIView
 
 from django.contrib import auth
 from wechat import models
-from wechat.models import *
+from wechat.models import Activity, Ticket
 from django.utils import timezone
+from wechat.views import CustomWeChatView
 import uuid
-from datetime import datetime
 
 from WeChatTicket import settings
 import os
+import datetime
 
 
 class Login(APIView):
@@ -147,7 +148,6 @@ class ActivityDetails(APIView):
         bookEnd = self.input["bookEnd"]
         totalTickets = self.input["totalTickets"]
         status = self.input["status"]
-
         try:
             activity = models.Activity.objects.get(id=activity_id)
         except models.Activity.DoesNotExist:
@@ -161,19 +161,23 @@ class ActivityDetails(APIView):
             activity.status = status
         elif status == 1:
             activity.status = status
-        if activity.end_time.timestamp() > timezone.now().timestamp():
+
+        if activity.end_time > timezone.now():
             activity.start_time = startTime
             activity.end_time = endTime
             activity.save()
             activity = models.Activity.objects.get(id=activity_id)
-        if activity.start_time.timestamp() > timezone.now().timestamp():
+
+        if activity.start_time > timezone.now():
             activity.book_end = bookEnd
-        if activity.book_start.timestamp() > timezone.now().timestamp():
+
+        if activity.book_start > timezone.now():
             activity.total_tickets = totalTickets
         activity.save()
 
 
 class UploadImg(APIView):
+
     def post(self):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
@@ -198,15 +202,22 @@ class ActivityMenu(APIView):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
 
-        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=datetime.now(),
-                                          book_start__lt=datetime.now())
+        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=datetime.datetime.now(),
+                                          book_start__lt=datetime.datetime.now())
         infos = []
         for act in actList:
-            info = {"id": act.id, "name": act.name, "menuIndex": 0}
+            info = {}
+            info["id"] = act.id
+            info["name"] = act.name
+            info["menuIndex"] = 0
             infos.append(info)
         infos.reverse()
-        for i in range(0, len(infos)):
-            infos[i]["menuIndex"] = max(min(5, len(infos)) - i, 0)
+        if len(infos) < 5:
+            for i in range(0, len(infos)):
+                infos[i]["menuIndex"] = 5 - i
+        else:
+            for i in range(0, len(infos)):
+                infos[i]["menuIndex"] = max(5 - i, 0)
         return infos
 
     def post(self):
@@ -215,14 +226,16 @@ class ActivityMenu(APIView):
         idList = self.input
         for i in Activity.objects.filter(status=Activity.STATUS_PUBLISHED):
             i.status = 0
+        activityList = []
         for id in idList:
             try:
                 act = Activity.objects.get(id=id)
                 act.status = 1
                 act.save()
+                activityList.append(act)
             except:
                 raise ValidateError("no such activity")
-        return None
+        CustomWeChatView.update_menu(activityList)
 
 
 class CheckIn(APIView):
@@ -234,6 +247,8 @@ class CheckIn(APIView):
         unique_id = self.input.get("ticket")
         if studentId == None and unique_id == None:
             raise ValidateError("info loss")
+        if studentId != None and unique_id != None:
+            raise ValidateError("shadiao geiduole")
         ticket = None
         try:
             if studentId != None:
@@ -246,5 +261,8 @@ class CheckIn(APIView):
             raise ValidateError("ticket Used!")
         if ticket.status == Ticket.STATUS_CANCELLED:
             raise ValidateError("ticket Canceled!")
+        ticket.status = Ticket.STATUS_USED
+        ticket.save()
         info = {"ticket": ticket.unique_id, "studentId": ticket.student_id}
         return info
+

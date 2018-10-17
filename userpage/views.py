@@ -31,7 +31,7 @@ class UserActivity(APIView):
         self.check_input("id")
         try:
             id = self.input["id"]
-            activity = Activity.objects.get(id=id, status=Activity.STATUS_PUBLISHED)
+            activity = Activity.objects.get(id=id)
             info = {"name": activity.name, "key": activity.key, "description": activity.description,
                     "startTime": activity.start_time.timestamp(), "endTime": activity.end_time.timestamp(),
                     "place": activity.place, "bookStart": activity.book_start.timestamp(),
