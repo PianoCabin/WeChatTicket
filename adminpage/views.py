@@ -6,7 +6,7 @@ from wechat import models
 from wechat.models import Activity, Ticket
 from django.utils import timezone
 import uuid
-import datetime
+
 
 from WeChatTicket import settings
 import os
@@ -212,12 +212,12 @@ class ActivityMenu(APIView):
             info["menuIndex"]=0
             infos.append(info)
         infos.reverse()
-        if(len(infos)<5):
-            for i in range(0,len(infos)):
-                infos[i]["menuIndex"] = 5-i
+        if len(infos) < 5:
+            for i in range(0, len(infos)):
+                infos[i]["menuIndex"] = 5 - i
         else:
-            for i in range(0,len(infos)):
-                infos[i]["menuIndex"] = max(5-i,0)
+            for i in range(0, len(infos)):
+                infos[i]["menuIndex"] = max(5-i, 0)
         return infos
 
     def post(self):
