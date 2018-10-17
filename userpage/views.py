@@ -64,7 +64,7 @@ class UserTicket(APIView):
             info["startTime"]=activity.start_time.timestamp()
             info["endTime"]=activity.end_time.timestamp()
             info["currentTime"]=datetime.datetime.now().timestamp()
-            info["status"]=activity.status
+            info["status"]=ticket.status
             return info
         except Exception as e:
             raise ValidateError("no such Ticket!")
