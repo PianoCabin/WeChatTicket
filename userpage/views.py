@@ -46,6 +46,8 @@ class UserActivity(APIView):
             return info
         except Exception as e:
             raise ValidateError("no such Activity")
+
+
 class UserTicket(APIView):
     def get(self):
         self.check_input("openid","ticket")

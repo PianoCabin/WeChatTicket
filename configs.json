@@ -7,7 +7,7 @@
   "WECHAT_SECRET": "PleaseCopyFromWebsite",
   "DB_NAME": "wechat_ticket",
   "DB_USER": "root",
-  "DB_PASS": "",
+  "DB_PASS": "lyj271271",
   "DB_HOST": "127.0.0.1",
   "DB_PORT": "3306",
   "SITE_DOMAIN": "http://your.domain"

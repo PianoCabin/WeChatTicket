@@ -160,7 +160,7 @@ class ActivityDetails(APIView):
             activity.book_start = bookStart
             activity.status = status
         elif status == 1:
-                activity.status = status
+            activity.status = status
         if activity.end_time.timestamp() > timezone.now().timestamp():
             activity.start_time = datetime.strptime(startTime, "%Y-%m-%dT%H:%M:%S.%fZ")
             activity.end_time = datetime.strptime(endTime, "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -170,7 +170,9 @@ class ActivityDetails(APIView):
             activity.total_tickets = totalTickets
         activity.save()
 
+
 class UploadImg(APIView):
+
     def post(self):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
@@ -183,10 +185,12 @@ class UploadImg(APIView):
                 file.write(chunk)
             file.close()
             path = 'uimg/'+name
-            url = os.path.join( settings.CONFIGS["SITE_DOMAIN"],path)
+            url = os.path.join(settings.CONFIGS["SITE_DOMAIN"], path)
             return url
         except Exception as e:
             raise ValidateError("failed to save Image")
+
+
 class ActivityMenu(APIView):
 
     def get(self):
@@ -209,6 +213,7 @@ class ActivityMenu(APIView):
             for i in range(0,len(infos)):
                 infos[i]["menuIndex"] = max(5-i,0)
         return infos
+
     def post(self):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")

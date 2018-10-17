@@ -50,5 +50,3 @@ class BindTest(TestCase):
         self.assertEqual(response.json()['code'], True)
 
 
-class ActivityDeTailTest(TestCase):
-    pass
