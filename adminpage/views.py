@@ -5,6 +5,7 @@ from django.contrib import auth
 from wechat import models
 from wechat.models import Activity, Ticket
 from django.utils import timezone
+from wechat.views import CustomWeChatView
 import uuid
 
 
@@ -226,15 +227,16 @@ class ActivityMenu(APIView):
         idList = self.input
         for i in Activity.objects.filter(status=Activity.STATUS_PUBLISHED):
             i.status = 0
+        activityList = []
         for id in idList:
             try:
                 act = Activity.objects.get(id=id)
                 act.status = 1
                 act.save()
+                activityList.append(act)
             except Exception as e:
                 raise ValidateError("no such activity")
-        return None
-
+        CustomWeChatView.update_menu(activityList)
 
 class CheckIn(APIView):
     def post(self):
