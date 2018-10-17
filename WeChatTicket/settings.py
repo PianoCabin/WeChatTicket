@@ -19,7 +19,7 @@ import urllib.parse
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Configurations load from file
-CONFIGS = json.loads(open(os.path.join(BASE_DIR, 'configs.example.json')).read())
+CONFIGS = json.loads(open(os.path.join(BASE_DIR, 'configs.json')).read())
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/

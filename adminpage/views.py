@@ -3,7 +3,7 @@ from codex.baseview import APIView
 
 from django.contrib import auth
 from wechat import models
-from wechat.models import Activity,Ticket,User
+from wechat.models import Activity, Ticket
 from django.utils import timezone
 import uuid
 from datetime import datetime
@@ -12,6 +12,7 @@ from WeChatTicket import settings
 import os
 
 import datetime
+
 
 class Login(APIView):
     def get(self):
@@ -148,8 +149,6 @@ class ActivityDetails(APIView):
         bookEnd = self.input["bookEnd"]
         totalTickets = self.input["totalTickets"]
         status = self.input["status"]
-
-        print('\n\n\n', type(startTime), '\n\n\n')
         try:
             activity = models.Activity.objects.get(id=activity_id)
         except models.Activity.DoesNotExist:
@@ -163,11 +162,16 @@ class ActivityDetails(APIView):
             activity.status = status
         elif status == 1:
                 activity.status = status
-        if activity.end_time.timestamp() > timezone.now().timestamp():
-            activity.start_time = datetime.strptime(startTime, "%Y-%m-%dT%H:%M:%S.%fZ")
-            activity.end_time = datetime.strptime(endTime, "%Y-%m-%dT%H:%M:%S.%fZ")
-        if activity.start_time.timestamp() > timezone.now().timestamp():
+
+        if activity.end_time > timezone.now():
+            activity.start_time = startTime
+            activity.end_time = endTime
+            activity.save()
+            activity = models.Activity.objects.get(id=activity_id)
+
+        if activity.start_time > timezone.now():
             activity.book_end = bookEnd
+
         if activity.book_start > timezone.now():
             activity.total_tickets = totalTickets
         activity.save()
