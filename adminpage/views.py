@@ -3,13 +3,15 @@ from codex.baseview import APIView
 
 from django.contrib import auth
 from wechat import models
-from wechat.models import Activity,Ticket,User
+from wechat.models import Activity, Ticket
 from django.utils import timezone
 import uuid
 from datetime import datetime
 
 from WeChatTicket import settings
 import os
+
+import datetime
 
 
 class Login(APIView):
@@ -147,7 +149,6 @@ class ActivityDetails(APIView):
         bookEnd = self.input["bookEnd"]
         totalTickets = self.input["totalTickets"]
         status = self.input["status"]
-
         try:
             activity = models.Activity.objects.get(id=activity_id)
         except models.Activity.DoesNotExist:
@@ -160,13 +161,26 @@ class ActivityDetails(APIView):
             activity.book_start = bookStart
             activity.status = status
         elif status == 1:
+<<<<<<< HEAD
             activity.status = status
         if activity.end_time.timestamp() > timezone.now().timestamp():
             activity.start_time = datetime.strptime(startTime, "%Y-%m-%dT%H:%M:%S.%fZ")
             activity.end_time = datetime.strptime(endTime, "%Y-%m-%dT%H:%M:%S.%fZ")
         if activity.start_time.timestamp() > timezone.now().timestamp():
+=======
+                activity.status = status
+
+        if activity.end_time > timezone.now():
+            activity.start_time = startTime
+            activity.end_time = endTime
+            activity.save()
+            activity = models.Activity.objects.get(id=activity_id)
+
+        if activity.start_time > timezone.now():
+>>>>>>> 5c36235fc76193985240f442e4574769fc7f148e
             activity.book_end = bookEnd
-        if activity.book_start.timestamp() > timezone.now().timestamp():
+
+        if activity.book_start > timezone.now():
             activity.total_tickets = totalTickets
         activity.save()
 
@@ -229,6 +243,7 @@ class ActivityMenu(APIView):
                 raise ValidateError("no such activity")
         return None
 
+
 class CheckIn(APIView):
     def post(self):
         if not self.request.user.is_authenticated():
@@ -254,3 +269,4 @@ class CheckIn(APIView):
         info["ticket"] = ticket.unique_id
         info["studentId"] = ticket.student_id
         return info
+

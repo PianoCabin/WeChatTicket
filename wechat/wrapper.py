@@ -13,10 +13,10 @@ from django.template.loader import get_template
 
 from WeChatTicket import settings
 from codex.baseview import BaseView
-from wechat.models import User
+from wechat.models import User, Ticket
 
 
-__author__ = "Epsirom"
+__author__ = "Venessa"
 
 
 class WeChatHandler(object):

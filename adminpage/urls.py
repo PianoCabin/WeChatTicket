@@ -4,7 +4,7 @@ from django.conf.urls import url
 from .views import *
 
 
-__author__ = "Epsirom"
+__author__ = "Venessa"
 
 
 urlpatterns = [

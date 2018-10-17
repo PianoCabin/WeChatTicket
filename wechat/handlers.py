@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 #
 from wechat.wrapper import WeChatHandler
+from wechat.models import Activity, Ticket
 
+from django.db import transaction
+import re
+from django.utils import timezone
+from WeChatTicket import settings
 
-__author__ = "Epsirom"
+__author__ = "Venessa"
 
 
 class ErrorHandler(WeChatHandler):
@@ -65,3 +70,26 @@ class BookEmptyHandler(WeChatHandler):
 
     def handle(self):
         return self.reply_text(self.get_message('book_empty'))
+
+
+# begin to add handler
+class BookWhatHandler(WeChatHandler):
+
+    def check(self):
+        return self.is_event_click(self.view.event_keys['book_what'])
+
+    def handle(self):
+        activity_list = Activity.objects.filter(status=Activity.STATUS_PUBLISHED)
+        if activity_list.exists():
+            articles = []
+            for activity in activity_list:
+                result = {
+                    'Title': activity.name,
+                    'Description': activity.description,
+                    'PicUrl': activity.pic_url,
+                    'Url': settings.get_url("/u/activity/", {"id": activity.id}),
+                }
+                articles.append(result)
+            return self.reply_news(articles)
+        else:
+            return self.reply_text("当前活动尚不可抢票")

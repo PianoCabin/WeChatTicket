@@ -1,7 +1,7 @@
 from codex.baseerror import *
 from codex.baseview import APIView
 
-from wechat.models import User,Activity,Ticket
+from wechat.models import User, Activity, Ticket
 import datetime
 import re
 
@@ -9,7 +9,7 @@ import re
 class UserBind(APIView):
 
     def validate_user(self):
-        if(re.match(r'[0-9]{10}',self.input["student_id"]) == None):
+        if(re.match(r'[0-9]{10}', self.input["student_id"]) == None):
             raise ValidateError("invalid Student_id")
         pass
         # raise NotImplementedError('You should implement UserBind.validate_user method')
@@ -24,6 +24,7 @@ class UserBind(APIView):
         self.validate_user()
         user.student_id = self.input['student_id']
         user.save()
+
 
 class UserActivity(APIView):
     def get(self):
