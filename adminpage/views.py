@@ -247,6 +247,8 @@ class CheckIn(APIView):
         unique_id = self.input.get("ticket")
         if(studentId == None and unique_id == None):
             raise ValidateError("info loss")
+        if(studentId != None and unique_id != None):
+            raise ValidateError("shadiao geiduole")
         ticket = None
         try:
             if(studentId != None):
