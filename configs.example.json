@@ -2,13 +2,13 @@
   "SECRET_KEY": "ThisIsARandomStringWithLength=50!-----------------",
   "DEBUG": true,
   "IGNORE_WECHAT_SIGNATURE": false,
-  "WECHAT_TOKEN": "ticket",
-  "WECHAT_APPID": "wx9c7ef79f6ee94a55",
-  "WECHAT_SECRET": "9c61a39051ca0a804fe9be1b59bc84e7",
+  "WECHAT_TOKEN": "ThisIsAWeChatTokenWhichCanBeARandomString",
+  "WECHAT_APPID": "PleaseCopyFromWebsite",
+  "WECHAT_SECRET": "PleaseCopyFromWebsite",
   "DB_NAME": "wechat_ticket",
   "DB_USER": "root",
-  "DB_PASS": "pianocabin",
+  "DB_PASS": "",
   "DB_HOST": "127.0.0.1",
   "DB_PORT": "3306",
-  "SITE_DOMAIN": "https://e5d8b460.ngrok.io/"
+  "SITE_DOMAIN": "http://your.domain"
 }
