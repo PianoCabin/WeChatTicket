@@ -6,7 +6,7 @@ from wechat import models
 from wechat.models import Activity, Ticket
 from django.utils import timezone
 import uuid
-from datetime import datetime
+import datetime
 
 from WeChatTicket import settings
 import os
@@ -203,7 +203,7 @@ class ActivityMenu(APIView):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
 
-        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED,book_end__gt=datetime.now(),book_start__lt=datetime.now())
+        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED,book_end__gt=datetime.datetime.now(),book_start__lt=datetime.datetime.now())
         infos = []
         for act in actList:
             info={}
