@@ -230,9 +230,6 @@ class ActivityCheckIn(TestCase):
         self.assertEqual(Ticket.objects.get(student_id=self.student_id_1).status, Ticket.STATUS_USED)
 
 
-DefaultUser = get_user_model()
-
-
 class Test_login(TestCase):
     """test for api 4"""
 
