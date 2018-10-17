@@ -5,8 +5,9 @@ from django.contrib import auth
 from wechat import models
 from wechat.models import Activity, Ticket
 from django.utils import timezone
+from wechat.views import CustomWeChatView
 import uuid
-from datetime import datetime
+
 
 from WeChatTicket import settings
 import os
@@ -202,7 +203,7 @@ class ActivityMenu(APIView):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
 
-        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED,book_end__gt=datetime.now(),book_start__lt=datetime.now())
+        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED,book_end__gt=datetime.datetime.now(),book_start__lt=datetime.datetime.now())
         infos = []
         for act in actList:
             info={}
@@ -211,12 +212,12 @@ class ActivityMenu(APIView):
             info["menuIndex"]=0
             infos.append(info)
         infos.reverse()
-        if(len(infos)<5):
-            for i in range(0,len(infos)):
-                infos[i]["menuIndex"] = 5-i
+        if len(infos) < 5:
+            for i in range(0, len(infos)):
+                infos[i]["menuIndex"] = 5 - i
         else:
-            for i in range(0,len(infos)):
-                infos[i]["menuIndex"] = max(5-i,0)
+            for i in range(0, len(infos)):
+                infos[i]["menuIndex"] = max(5-i, 0)
         return infos
 
     def post(self):
@@ -225,15 +226,16 @@ class ActivityMenu(APIView):
         idList = self.input
         for i in Activity.objects.filter(status=Activity.STATUS_PUBLISHED):
             i.status = 0
+        activityList = []
         for id in idList:
             try:
                 act = Activity.objects.get(id=id)
                 act.status = 1
                 act.save()
+                activityList.append(act)
             except Exception as e:
                 raise ValidateError("no such activity")
-        return None
-
+        CustomWeChatView.update_menu(activityList)
 
 class CheckIn(APIView):
     def post(self):
@@ -256,6 +258,8 @@ class CheckIn(APIView):
             raise ValidateError("ticket Used!")
         if(ticket.status == Ticket.STATUS_CANCELLED):
             raise ValidateError("ticket Canceled!")
+        ticket.status=Ticket.STATUS_USED
+        ticket.save()
         info = {}
         info["ticket"] = ticket.unique_id
         info["studentId"] = ticket.student_id
