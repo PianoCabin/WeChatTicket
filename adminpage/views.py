@@ -161,13 +161,6 @@ class ActivityDetails(APIView):
             activity.book_start = bookStart
             activity.status = status
         elif status == 1:
-<<<<<<< HEAD
-            activity.status = status
-        if activity.end_time.timestamp() > timezone.now().timestamp():
-            activity.start_time = datetime.strptime(startTime, "%Y-%m-%dT%H:%M:%S.%fZ")
-            activity.end_time = datetime.strptime(endTime, "%Y-%m-%dT%H:%M:%S.%fZ")
-        if activity.start_time.timestamp() > timezone.now().timestamp():
-=======
                 activity.status = status
 
         if activity.end_time > timezone.now():
@@ -177,7 +170,6 @@ class ActivityDetails(APIView):
             activity = models.Activity.objects.get(id=activity_id)
 
         if activity.start_time > timezone.now():
->>>>>>> 5c36235fc76193985240f442e4574769fc7f148e
             activity.book_end = bookEnd
 
         if activity.book_start > timezone.now():
