@@ -3,7 +3,7 @@ from codex.baseview import APIView
 
 from django.contrib import auth
 from wechat import models
-from wechat.models import Activity,Ticket,User
+from wechat.models import *
 from django.utils import timezone
 import uuid
 from datetime import datetime
@@ -91,9 +91,9 @@ class ActivityCreate(APIView):
         remainTickets = totalTickets
 
         new_activity = models.Activity.objects.create(
-            name=name, key=key, place=place, description=description,pic_url=picUrl,
+            name=name, key=key, place=place, description=description, pic_url=picUrl,
             start_time=startTime, end_time=endTime, book_start=bookStart, book_end=bookEnd,
-            total_tickets=totalTickets, status=status,remain_tickets=remainTickets)
+            total_tickets=totalTickets, status=status, remain_tickets=remainTickets)
 
         if not new_activity:
             raise InputError("Fail to create a activity!")
@@ -114,20 +114,20 @@ class ActivityDetails(APIView):
         usedTickets = models.Ticket.objects.filter(status=models.Ticket.STATUS_USED)
         usedTickets = len(usedTickets)
         activity_details = {
-                "name": activity.name,
-                "key": activity.key,
-                "description": activity.description,
-                "startTime": activity.start_time.timestamp(),
-                "endTime": activity.end_time.timestamp(),
-                "place": activity.place,
-                "bookStart": activity.book_start.timestamp(),
-                "bookEnd": activity.book_end.timestamp(),
-                "totalTickets": activity.total_tickets,
-                "picUrl": activity.pic_url,
-                "bookedTickets": bookedTickets,
-                "usedTickets": usedTickets,
-                "currentTime": timezone.now().timestamp(),
-                "status": activity.status
+            "name": activity.name,
+            "key": activity.key,
+            "description": activity.description,
+            "startTime": activity.start_time.timestamp(),
+            "endTime": activity.end_time.timestamp(),
+            "place": activity.place,
+            "bookStart": activity.book_start.timestamp(),
+            "bookEnd": activity.book_end.timestamp(),
+            "totalTickets": activity.total_tickets,
+            "picUrl": activity.pic_url,
+            "bookedTickets": bookedTickets,
+            "usedTickets": usedTickets,
+            "currentTime": timezone.now().timestamp(),
+            "status": activity.status
         }
         return activity_details
 
@@ -160,15 +160,18 @@ class ActivityDetails(APIView):
             activity.book_start = bookStart
             activity.status = status
         elif status == 1:
-                activity.status = status
+            activity.status = status
         if activity.end_time.timestamp() > timezone.now().timestamp():
-            activity.start_time = datetime.strptime(startTime, "%Y-%m-%dT%H:%M:%S.%fZ")
-            activity.end_time = datetime.strptime(endTime, "%Y-%m-%dT%H:%M:%S.%fZ")
+            activity.start_time = startTime
+            activity.end_time = endTime
+            activity.save()
+            activity = models.Activity.objects.get(id=activity_id)
         if activity.start_time.timestamp() > timezone.now().timestamp():
             activity.book_end = bookEnd
         if activity.book_start.timestamp() > timezone.now().timestamp():
             activity.total_tickets = totalTickets
         activity.save()
+
 
 class UploadImg(APIView):
     def post(self):
@@ -182,33 +185,30 @@ class UploadImg(APIView):
             for chunk in image.chunks():
                 file.write(chunk)
             file.close()
-            path = 'uimg/'+name
-            url = os.path.join( settings.CONFIGS["SITE_DOMAIN"],path)
+            path = 'uimg/' + name
+            url = os.path.join(settings.CONFIGS["SITE_DOMAIN"], path)
             return url
-        except Exception as e:
+        except:
             raise ValidateError("failed to save Image")
+
+
 class ActivityMenu(APIView):
 
     def get(self):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
 
-        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED,book_end__gt=datetime.now(),book_start__lt=datetime.now())
+        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=datetime.now(),
+                                          book_start__lt=datetime.now())
         infos = []
         for act in actList:
-            info={}
-            info["id"] =act.id
-            info["name"] = act.name
-            info["menuIndex"]=0
+            info = {"id": act.id, "name": act.name, "menuIndex": 0}
             infos.append(info)
         infos.reverse()
-        if(len(infos)<5):
-            for i in range(0,len(infos)):
-                infos[i]["menuIndex"] = 5-i
-        else:
-            for i in range(0,len(infos)):
-                infos[i]["menuIndex"] = max(5-i,0)
+        for i in range(0, len(infos)):
+            infos[i]["menuIndex"] = max(min(5, len(infos)) - i, 0)
         return infos
+
     def post(self):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
@@ -220,9 +220,10 @@ class ActivityMenu(APIView):
                 act = Activity.objects.get(id=id)
                 act.status = 1
                 act.save()
-            except Exception as e:
+            except:
                 raise ValidateError("no such activity")
         return None
+
 
 class CheckIn(APIView):
     def post(self):
@@ -231,21 +232,19 @@ class CheckIn(APIView):
         self.check_input("actId")
         studentId = self.input.get("studentId")
         unique_id = self.input.get("ticket")
-        if(studentId == None and unique_id == None):
+        if studentId == None and unique_id == None:
             raise ValidateError("info loss")
         ticket = None
         try:
-            if(studentId != None):
-                ticket = Ticket.objects.get(studentId = studentId)
+            if studentId != None:
+                ticket = Ticket.objects.get(studentId=studentId)
             else:
                 ticket = Ticket.objects.get(unique_id=unique_id)
-        except Exception as e:
+        except:
             raise ValidateError("invalid Ticket")
-        if(ticket.status == Ticket.STATUS_USED):
+        if ticket.status == Ticket.STATUS_USED:
             raise ValidateError("ticket Used!")
-        if(ticket.status == Ticket.STATUS_CANCELLED):
+        if ticket.status == Ticket.STATUS_CANCELLED:
             raise ValidateError("ticket Canceled!")
-        info = {}
-        info["ticket"] = ticket.unique_id
-        info["studentId"] = ticket.student_id
+        info = {"ticket": ticket.unique_id, "studentId": ticket.student_id}
         return info
