@@ -8,7 +8,6 @@ from django.views.generic import View
 
 from codex.baseerror import BaseError, InputError
 
-
 __author__ = "Epsirom"
 
 

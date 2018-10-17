@@ -11,7 +11,6 @@ import uuid
 
 from WeChatTicket import settings
 import os
-
 import datetime
 
 
