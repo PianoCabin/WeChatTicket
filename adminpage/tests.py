@@ -400,3 +400,27 @@ class Test_activity_delete(TestCase):
         # 删除不存在的记录
         response = self.client.post('/api/a/activity/delete', {"id": 100})
         self.assertEqual(response.json()['code'], 2)
+
+    def test_activity_create(self):
+        # 正确登录
+        self.client.post('/api/a/login', {"username": self.username, "password": self.password})
+
+        # 正确创建活动
+        new_activity_1 = {"name": "a", "key": "a", "place": "a", "description": "a", "picUrl": "/uimg/1.jpg",
+                          "totalTickets": "100",
+                          "status": 1, "startTime": "2018-10-31T16:00:00.000Z", "endTime": "2018-11-01T16:00:00.000Z",
+                          "bookStart": "2018-10-25T16:00:00.000Z", "bookEnd": "2018-10-26T16:00:00.000Z"}
+
+        response = self.client.post('/api/a/activity/create', new_activity_1)
+        self.assertEqual(response.json()['code'], 0)
+
+        # 错误创建活动，格式不对,缺status
+        new_activity_2 = {'name': '4', 'key': '4', 'place': '4', 'description': '4', 'pic_url': '/uimg1.jpg',
+                          'start_time': '2019-05-18T16:28:00.070Z',
+                          'end_time': '2019-10-18T16:28:00.070Z',
+                          'book_start': '2019-03-18T16:28:00.070Z',
+                          'book_end': '2019-04-18T16:28:00.070Z',
+                          'total_tickets': '400'}
+
+        response = self.client.post('/api/a/activity/create', new_activity_2)
+        self.assertEqual(response.json()['code'], 1)

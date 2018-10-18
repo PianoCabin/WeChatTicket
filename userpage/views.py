@@ -35,7 +35,7 @@ class UserActivity(APIView):
             info = {"name": activity.name, "key": activity.key, "description": activity.description,
                     "startTime": activity.start_time.timestamp(), "endTime": activity.end_time.timestamp(),
                     "place": activity.place, "bookStart": activity.book_start.timestamp(),
-                    "bookEnd": activity.book_end.timestamp(), "totalTickets": activity.total_tickets,
+                    "bookEnd": activity.book_end.timestamp(), "totalTickets": activity.total_tickets,"remainTickets":activity.remain_tickets,
                     "picUrl": activity.pic_url, "currentTime": datetime.datetime.now().timestamp()}
             return info
         except:

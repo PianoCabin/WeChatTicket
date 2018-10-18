@@ -55,7 +55,7 @@ class ActivityList(APIView):
                 "place": activity.place,
                 "bookStart": activity.book_start.timestamp(),
                 "bookEnd": activity.book_end.timestamp(),
-                "currentTime": timezone.now().timestamp(),
+                "currentTime": (timezone.now()).timestamp(),
                 "status": activity.status
             })
 
