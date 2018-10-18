@@ -144,7 +144,7 @@ class BookTicketHandler(WeChatHandler):
             if self.is_text_command("抢票"):
 
                 key = re.match(r'抢票\s([\s\S]+)', self.input['Content'], re.DOTALL)
-                if (key == None):
+                if key is None:
                     return self.reply_text("请按格式输入：抢票 活动代称")
                 key = key.group(1)
                 try:
