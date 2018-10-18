@@ -5,7 +5,9 @@ from wechat.models import Activity, Ticket
 
 from WeChatTicket import settings
 from datetime import timedelta
-
+import re
+from django.utils import timezone
+from django.db import transaction
 import uuid
 
 __author__ = "Venessa, PianoCabin"
@@ -208,6 +210,7 @@ class BookTicketHandler(WeChatHandler):
 class RefundHandler(WeChatHandler):
     def check(self):
         return self.is_text_command("退票")
+
     def handle(self):
         with transaction.atomic():
             key = re.match(r'退票\s([\s\S]+)', self.input['Content'], re.DOTALL)
