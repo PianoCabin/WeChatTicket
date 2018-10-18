@@ -204,20 +204,30 @@ class ActivityMenu(APIView):
     def get(self):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
-
+        current_menu = CustomWeChatView.lib.get_wechat_menu()
+        existed_buttons = list()
+        for btn in current_menu:
+            if btn['name'] == '抢票':
+                existed_buttons += btn.get('sub_button', list())
+        activity_ids = list()
+        for btn in existed_buttons:
+            if 'key' in btn:
+                activity_id = btn['key']
+                if activity_id.startswith(CustomWeChatView.event_keys['book_header']):
+                    activity_id = activity_id[len(CustomWeChatView.event_keys['book_header']):]
+                if activity_id and activity_id.isdigit():
+                    activity_ids.append(int(activity_id))
         actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=timezone.now(),
                                           book_start__lt=timezone.now())
+        print(activity_ids)
         infos = []
         for act in actList:
             info = {"id": act.id, "name": act.name, "menuIndex": 0}
             infos.append(info)
-        infos.reverse()
-        if len(infos) < 5:
-            for i in range(0, len(infos)):
-                infos[i]["menuIndex"] = 5 - i
-        else:
-            for i in range(0, len(infos)):
-                infos[i]["menuIndex"] = max(5 - i, 0)
+        for info in infos:
+            if info['id'] in activity_ids:
+                print('here')
+                info['menuIndex'] = activity_ids.index(info['id'])+1
         return infos
 
     def post(self):
@@ -235,6 +245,7 @@ class ActivityMenu(APIView):
                 activityList.append(act)
             except:
                 raise ValidateError("no such activity")
+        print(activityList)
         CustomWeChatView.update_menu(activityList)
 
 

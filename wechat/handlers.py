@@ -196,7 +196,7 @@ class BookTicketHandler(WeChatHandler):
             try:
                 ticket = Ticket.objects.get(activity_id=activity.id, student_id=self.user.student_id,
                                             status__gt=Ticket.STATUS_CANCELLED)
-                return self.reply_single_news(self.get_ticket_detail(ticket))
+                return self.reply_text("您好，您已经有该活动的票，请点击查票查询电子票详情")
             except:
                 info = activity.name + self.user.student_id
                 unique_id = str(uuid.uuid1()) + info
