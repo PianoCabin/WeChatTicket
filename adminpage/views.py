@@ -11,6 +11,8 @@ import uuid
 from WeChatTicket import settings
 import os
 import datetime
+from datetime import timedelta
+import urllib.parse
 
 
 class Login(APIView):
@@ -55,7 +57,7 @@ class ActivityList(APIView):
                 "place": activity.place,
                 "bookStart": activity.book_start.timestamp(),
                 "bookEnd": activity.book_end.timestamp(),
-                "currentTime": (timezone.now()).timestamp(),
+                "currentTime": timezone.now().timestamp(),
                 "status": activity.status
             })
 
@@ -190,7 +192,7 @@ class UploadImg(APIView):
                 file.write(chunk)
             file.close()
             path = 'uimg/' + name
-            url = os.path.join(settings.CONFIGS["SITE_DOMAIN"], path)
+            url = urllib.parse.urljoin(settings.CONFIGS["SITE_DOMAIN"], path)
             return url
         except:
             raise ValidateError("failed to save Image")
@@ -202,8 +204,8 @@ class ActivityMenu(APIView):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
 
-        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=datetime.datetime.now(),
-                                          book_start__lt=datetime.datetime.now())
+        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=timezone.now(),
+                                          book_start__lt=timezone.now())
         infos = []
         for act in actList:
             info = {}

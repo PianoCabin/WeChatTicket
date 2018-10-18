@@ -4,6 +4,7 @@ from .views import *
 from django.utils import timezone as datetime
 from django.contrib.auth import get_user_model
 import json
+from WeChatTicket.settings import *
 
 DefaultUser = get_user_model()
 

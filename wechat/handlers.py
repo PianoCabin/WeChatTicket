@@ -202,7 +202,7 @@ class RefundHandler(WeChatHandler):
                 return self.reply_text("您的票已经使用，不可退票")
             if ticket.status == Ticket.STATUS_CANCELLED:
                 return self.reply_text("您的票已经取消，不可退票")
-            if ticket.activity.start_time < timezone.now() + timedelta(hours=8,minutes=45):
+            if ticket.activity.start_time < timezone.now() + timedelta(minutes=45):
                 return self.reply_text("只能在活动开始45分钟前退票")
             ticket.status = Ticket.STATUS_CANCELLED
             ticket.save()
