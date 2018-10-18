@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from wechat.views import CustomWeChatView
 from wechat.models import Activity
+from datetime import timedelta
 
 
 __author__ = "Epsirom"

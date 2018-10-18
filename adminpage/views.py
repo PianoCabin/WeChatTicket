@@ -12,6 +12,8 @@ from WeChatTicket import settings
 import os
 import datetime
 import urllib.parse
+from datetime import timedelta
+import urllib.parse
 
 
 class Login(APIView):
@@ -203,8 +205,8 @@ class ActivityMenu(APIView):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
 
-        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=datetime.datetime.now(),
-                                          book_start__lt=datetime.datetime.now())
+        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=timezone.now(),
+                                          book_start__lt=timezone.now())
         infos = []
         for act in actList:
             info = {"id": act.id, "name": act.name, "menuIndex": 0}
