@@ -479,8 +479,10 @@ class Test_activity_detail(TestCase):
         # 正确登录
         self.client.post('/api/a/login', {"username": self.username, "password": self.password})
 
+        response = self.client.get('/api/a/activity/list')
+        print(response.json())
         # 获取已有活动详情
-        response = self.client.get('/api/a/activity/detail', {"id": 6})
+        response = self.client.get('/api/a/activity/detail', {"id": 13})
         self.assertEqual(response.json()['code'], 0)
 
         # 获取未有活动详情
@@ -494,6 +496,6 @@ class Test_activity_detail(TestCase):
                      "bookEnd": "1347985687.19869"}
 
         response = self.client.post('/api/a/activity/detail', activity2)
-        self.assertEqual(response.json()['code'], -1)
+        self.assertEqual(response.json()['code'], 2)
 
         # 修改规则已在前端写好
