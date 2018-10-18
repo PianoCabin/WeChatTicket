@@ -238,6 +238,7 @@ class ActivityMenu(APIView):
                 raise ValidateError("no such activity")
         CustomWeChatView.update_menu(activityList)
 
+
 class CheckIn(APIView):
     def post(self):
         if not self.request.user.is_authenticated():

@@ -88,14 +88,14 @@ class BookWhatHandler(WeChatHandler):
             for activity in activity_list:
                 calibration_begintime = (activity.start_time + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
                 calibration_endtime = (activity.book_end + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
-                result = {
+                messages = {
                     'Title': activity.name,
                     'Description': '开始时间：' + calibration_begintime + activity.description +
                                    '\n抢票结束时间：' + calibration_endtime,
                     'PicUrl': activity.pic_url,
                     'Url': settings.get_url("/u/activity/", {"id": activity.id}),
                 }
-                articles.append(result)
+                articles.append(messages)
             return self.reply_news(articles)
         else:
             return self.reply_text("当前活动尚不可抢票")
@@ -130,54 +130,29 @@ class CheckTicketHandler(WeChatHandler):
         return self.reply_news(articles)
 
 
-class BookTicketHandler(WeChatHandler):
+class TakeTicketHandler(WeChatHandler):
 
     def check(self):
-        return self.is_text_command("抢票") or (self.is_msg_type('event') and (self.input['Event'] == 'CLICK') \
-               and (re.match("^BOOKING_ACTIVITY_[0-9]+$", self.input['EventKey'])))
+        self.is_text_command("取票")
 
     def handle(self):
         if not self.user.student_id:
-            return self.reply_text("请先绑定")
+            return self.reply_text("请先绑定姓名学号")
 
-        with transaction.atomic():
-            if self.is_msg_type('text'):
-                key = re.match("^抢票\s([\w\W]+)$", self.input['Content']).group(1)
-                try:
-                    activity = Activity.objects.select_for_update().get(key=key, status=Activity.STATUS_PUBLISHED)
-                except Activity.DoesNotExist:
-                    return self.reply_text("对不起，找不到你想要的活动")
-            else:
-                id = re.match("^BOOKING_ACTIVITY_([0-9]+$)", self.input['EventKey']).group(1)
-                try:
-                    activity = Activity.objects.select_for_update().get(id=id)
-                except Activity.DoesNotExist:
-                    return self.reply_text("对不起，找不到你想要的活动")
+        key = self.input['Content'][3:]
 
-            current_time = timezone.now()
-            ticket = self.get_ticket_by_student_id_and_activity_id(activity, True)
-            if current_time < activity.book_start:
-                return self.reply_single_news(self.get_activity_detail(activity))
-            elif current_time > activity.book_end:
-                if not ticket:
-                    return self.reply_text("抢票已结束，而且你没有该活动的票")
-                else:
-                    return self.reply_single_news(self.get_ticket_detail(ticket))
-
-
+        try:
+            activity = Activity.objects.get(key=key, status=Activity.STATUS_PUBLISHED)
+            ticket = Ticket.objects.filter(student_id=self.user.student_id, status=Ticket.STATUS_VALID, activity_id=activity.id)
             if ticket:
-                return self.reply_text("你已经有该活动的票了")
-
-            if activity.remain_tickets <= 0:
-                return self.reply_text("对不起，该活动已经没有票了")
-
-            ticket = Ticket.objects.create(student_id=self.user.student_id, activity=activity,
-                                           status=Ticket.STATUS_VALID, unique_id=self.user.open_id + str(activity.id))
-
-            ticket.unique_id += str(ticket.id)
-
-            ticket.save()
-            activity.remain_tickets -= 1
-            activity.save()
-
-        return self.reply_single_news(self.get_ticket_detail(ticket))
+                calibration_begintime = (activity.start_time + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
+                messages = {
+                    'Title': activity.name,
+                    'Description': '开始时间：' + calibration_begintime + '\n地点：' + activity.place,
+                    'PicUrl': activity.pic_url,
+                    'Url': settings.get_url("/u/activity/", {"id": activity.id}),
+                }
+                return self.reply_single_news(messages)
+            return self.reply_text("抱歉，您并没有该活动的门票")
+        except:
+            return self.reply_text("抱歉，您并没有该活动的门票")
