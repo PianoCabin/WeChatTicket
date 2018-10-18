@@ -69,6 +69,7 @@ class ActivityDeTailTest(TestCase):
                             "endTime": cls.activity.end_time.timestamp(),
                             "place": cls.activity.place, "bookStart": cls.activity.book_start.timestamp(),
                             "bookEnd": cls.activity.book_end.timestamp(), "totalTickets": cls.activity.total_tickets,
+                            'remainTickets': cls.activity.remain_tickets,
                             "picUrl": cls.activity.pic_url, "currentTime": datetime.now().timestamp()}
 
     def setUp(self):

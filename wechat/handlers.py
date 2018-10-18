@@ -85,14 +85,14 @@ class BookWhatHandler(WeChatHandler):
             for activity in activity_list:
                 calibration_begintime = (activity.start_time + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
                 calibration_endtime = (activity.book_end + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
-                messages = {
+                result = {
                     'Title': activity.name,
                     'Description': '开始时间：' + calibration_begintime + activity.description +
                                    '\n抢票结束时间：' + calibration_endtime,
                     'PicUrl': activity.pic_url,
                     'Url': settings.get_url("/u/activity/", {"id": activity.id}),
                 }
-                articles.append(messages)
+                articles.append(result)
             return self.reply_news(articles)
         else:
             return self.reply_text("当前活动尚不可抢票")
@@ -169,7 +169,7 @@ class BookTicketHandler(WeChatHandler):
             if self.is_text_command("抢票"):
 
                 key = re.match(r'抢票\s([\s\S]+)', self.input['Content'], re.DOTALL)
-                if (key == None):
+                if key is None:
                     return self.reply_text("请按格式输入：抢票 活动代称")
                 key = key.group(1)
                 try:
@@ -203,4 +203,37 @@ class BookTicketHandler(WeChatHandler):
                 activity.remain_tickets -= 1
                 activity.save()
                 return self.reply_single_news(self.get_ticket_detail(ticket))
+
+
+class RefundHandler(WeChatHandler):
+    def check(self):
+        return self.is_text_command("退票")
+    def handle(self):
+        with transaction.atomic():
+            key = re.match(r'退票\s([\s\S]+)', self.input['Content'], re.DOTALL)
+            if (key == None):
+                return self.reply_text("请按格式输入：退票 活动代称")
+            key = key.group(1)
+            activity = None
+            ticket = None
+            try:
+                activity = Activity.objects.get(key=key)
+            except:
+                return self.reply_text("未查询到相关活动")
+            try:
+                ticket = Ticket.objects.get(activity=activity,student_id=self.user.student_id)
+            except:
+                return self.reply_text("您没有此活动的票")
+            if ticket.status == Ticket.STATUS_USED:
+                return self.reply_text("您的票已经使用，不可退票")
+            if ticket.status == Ticket.STATUS_CANCELLED:
+                return self.reply_text("您的票已经取消，不可退票")
+            if ticket.activity.start_time < timezone.now() + timedelta(minutes=45):
+                return self.reply_text("只能在活动开始45分钟前退票")
+            ticket.status = Ticket.STATUS_CANCELLED
+            ticket.save()
+            ticket.activity.remain_tickets +=1
+            ticket.activity.save()
+            ticket.delete()
+            return self.reply_text("退票成功!")
 

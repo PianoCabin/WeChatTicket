@@ -1,0 +1,6 @@
+{% extends "base.xml" %}
+{% block msg_type %}text{% endblock %}
+{% block content %}
+    <Content><![CDATA[{{ Content }}]]></Content>
+    <MsgId>2343242314</MsgId>
+{% endblock %}

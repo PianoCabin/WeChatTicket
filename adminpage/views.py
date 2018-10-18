@@ -11,6 +11,9 @@ import uuid
 from WeChatTicket import settings
 import os
 import datetime
+import urllib.parse
+from datetime import timedelta
+import urllib.parse
 
 
 class Login(APIView):
@@ -190,7 +193,7 @@ class UploadImg(APIView):
                 file.write(chunk)
             file.close()
             path = 'uimg/' + name
-            url = os.path.join(settings.CONFIGS["SITE_DOMAIN"], path)
+            url = urllib.parse.urljoin(settings.CONFIGS["SITE_DOMAIN"], path)
             return url
         except:
             raise ValidateError("failed to save Image")
@@ -202,14 +205,11 @@ class ActivityMenu(APIView):
         if not self.request.user.is_authenticated():
             raise ValidateError("Please login!")
 
-        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=datetime.datetime.now(),
-                                          book_start__lt=datetime.datetime.now())
+        actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=timezone.now(),
+                                          book_start__lt=timezone.now())
         infos = []
         for act in actList:
-            info = {}
-            info["id"] = act.id
-            info["name"] = act.name
-            info["menuIndex"] = 0
+            info = {"id": act.id, "name": act.name, "menuIndex": 0}
             infos.append(info)
         infos.reverse()
         if len(infos) < 5:
