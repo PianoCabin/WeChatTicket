@@ -9,8 +9,6 @@ import re
 from django.utils import timezone
 from django.db import transaction
 import uuid
-import pytz
-tz = pytz.timezone('Asia/Shanghai')
 
 __author__ = "PianoCabin"
 
