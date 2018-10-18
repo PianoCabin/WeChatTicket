@@ -5,12 +5,10 @@ from wechat.models import Activity, Ticket
 
 from WeChatTicket import settings
 from datetime import timedelta
-import re
-from django.utils import timezone
-from django.db import transaction
+
 import uuid
 
-__author__ = "PianoCabin"
+__author__ = "Venessa, PianoCabin"
 
 
 class ErrorHandler(WeChatHandler):
@@ -74,7 +72,6 @@ class BookEmptyHandler(WeChatHandler):
         return self.reply_text(self.get_message('book_empty'))
 
 
-# begin to add handler
 class BookWhatHandler(WeChatHandler):
 
     def check(self):
@@ -133,6 +130,34 @@ class CheckTicketHandler(WeChatHandler):
 class TakeTicketHandler(WeChatHandler):
 
     def check(self):
+        self.is_text_command("取票")
+
+    def handle(self):
+        if not self.user.student_id:
+            return self.reply_text("请先绑定姓名学号")
+
+        key = self.input['Content'][3:]
+
+        try:
+            activity = Activity.objects.get(key=key, status=Activity.STATUS_PUBLISHED)
+            ticket = Ticket.objects.filter(student_id=self.user.student_id, status=Ticket.STATUS_VALID, activity_id=activity.id)
+            if ticket:
+                calibration_begintime = (activity.start_time + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
+                messages = {
+                    'Title': activity.name,
+                    'Description': '开始时间：' + calibration_begintime + '\n地点：' + activity.place,
+                    'PicUrl': activity.pic_url,
+                    'Url': settings.get_url("/u/activity/", {"id": activity.id}),
+                }
+                return self.reply_single_news(messages)
+            return self.reply_text("抱歉，您并没有该活动的门票")
+        except:
+            return self.reply_text("抱歉，您并没有该活动的门票")
+
+
+class BookTicketHandler(WeChatHandler):
+
+    def check(self):
         return self.is_text_command("抢票") or (self.is_msg_type('event') and (self.input['Event'] == 'CLICK') \
                                               and (re.match("BOOKING_ACTIVITY_[0-9]+$", self.input['EventKey'])))
 
@@ -178,3 +203,4 @@ class TakeTicketHandler(WeChatHandler):
                 activity.remain_tickets -= 1
                 activity.save()
                 return self.reply_single_news(self.get_ticket_detail(ticket))
+
