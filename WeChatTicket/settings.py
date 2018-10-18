@@ -43,7 +43,6 @@ WECHAT_SECRET = CONFIGS['WECHAT_SECRET']
 
 ALLOWED_HOSTS = ['*']
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -99,9 +98,7 @@ if not DEBUG:
         ]),
     ]
 
-
 WSGI_APPLICATION = 'WeChatTicket.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
@@ -116,7 +113,6 @@ DATABASES = {
         'PORT': CONFIGS['DB_PORT'],
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
@@ -136,7 +132,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
@@ -150,14 +145,12 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
 
 # Site and URL
 SITE_DOMAIN = CONFIGS['SITE_DOMAIN'].rstrip('/')

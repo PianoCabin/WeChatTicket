@@ -8,9 +8,9 @@ from datetime import timedelta
 import re
 from django.utils import timezone
 from django.db import transaction
+import uuid
 
-
-__author__ = "Venessa"
+__author__ = "PianoCabin"
 
 
 class ErrorHandler(WeChatHandler):
@@ -88,14 +88,14 @@ class BookWhatHandler(WeChatHandler):
             for activity in activity_list:
                 calibration_begintime = (activity.start_time + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
                 calibration_endtime = (activity.book_end + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
-                result = {
+                messages = {
                     'Title': activity.name,
                     'Description': '开始时间：' + calibration_begintime + activity.description +
                                    '\n抢票结束时间：' + calibration_endtime,
                     'PicUrl': activity.pic_url,
                     'Url': settings.get_url("/u/activity/", {"id": activity.id}),
                 }
-                articles.append(result)
+                articles.append(messages)
             return self.reply_news(articles)
         else:
             return self.reply_text("当前活动尚不可抢票")
@@ -130,54 +130,51 @@ class CheckTicketHandler(WeChatHandler):
         return self.reply_news(articles)
 
 
-class BookTicketHandler(WeChatHandler):
+class TakeTicketHandler(WeChatHandler):
 
     def check(self):
         return self.is_text_command("抢票") or (self.is_msg_type('event') and (self.input['Event'] == 'CLICK') \
-               and (re.match("^BOOKING_ACTIVITY_[0-9]+$", self.input['EventKey'])))
+                                              and (re.match("BOOKING_ACTIVITY_[0-9]+$", self.input['EventKey'])))
 
     def handle(self):
         if not self.user.student_id:
-            return self.reply_text("请先绑定")
-
+            return self.reply_text("未绑定学号")
         with transaction.atomic():
-            if self.is_msg_type('text'):
-                key = re.match("^抢票\s([\w\W]+)$", self.input['Content']).group(1)
+            activity = None
+            if self.is_text_command("抢票"):
+
+                key = re.match(r'抢票\s([\s\S]+)', self.input['Content'], re.DOTALL)
+                if (key == None):
+                    return self.reply_text("请按格式输入：抢票 活动代称")
+                key = key.group(1)
                 try:
-                    activity = Activity.objects.select_for_update().get(key=key, status=Activity.STATUS_PUBLISHED)
-                except Activity.DoesNotExist:
-                    return self.reply_text("对不起，找不到你想要的活动")
+                    activity = Activity.objects.get(key=key)
+                except:
+                    return self.reply_text("未查询到相关活动")
             else:
-                id = re.match("^BOOKING_ACTIVITY_([0-9]+$)", self.input['EventKey']).group(1)
+                id = re.match("BOOKING_ACTIVITY_([0-9]+)$", self.input['EventKey']).group(1)
+                print(id)
                 try:
-                    activity = Activity.objects.select_for_update().get(id=id)
-                except Activity.DoesNotExist:
-                    return self.reply_text("对不起，找不到你想要的活动")
-
-            current_time = timezone.now()
-            ticket = self.get_ticket_by_student_id_and_activity_id(activity, True)
-            if current_time < activity.book_start:
-                return self.reply_single_news(self.get_activity_detail(activity))
-            elif current_time > activity.book_end:
-                if not ticket:
-                    return self.reply_text("抢票已结束，而且你没有该活动的票")
-                else:
-                    return self.reply_single_news(self.get_ticket_detail(ticket))
-
-
-            if ticket:
-                return self.reply_text("你已经有该活动的票了")
-
+                    activity = Activity.objects.get(id=id)
+                except:
+                    return self.reply_text("未查询到相关活动")
+            if activity.status != Activity.STATUS_PUBLISHED:
+                return self.reply_text("该活动未发布")
+            if activity.book_end < timezone.now():
+                return self.reply_text("该活动抢票已截止")
+            if activity.book_start > timezone.now():
+                return self.reply_text("该活动未开放抢票")
             if activity.remain_tickets <= 0:
-                return self.reply_text("对不起，该活动已经没有票了")
-
-            ticket = Ticket.objects.create(student_id=self.user.student_id, activity=activity,
-                                           status=Ticket.STATUS_VALID, unique_id=self.user.open_id + str(activity.id))
-
-            ticket.unique_id += str(ticket.id)
-
-            ticket.save()
-            activity.remain_tickets -= 1
-            activity.save()
-
-        return self.reply_single_news(self.get_ticket_detail(ticket))
+                return self.reply_text("该活动已无余票")
+            try:
+                ticket = Ticket.objects.get(activity_id=activity.id, student_id=self.user.student_id,
+                                            status__gt=Ticket.STATUS_CANCELLED)
+                return self.reply_single_news(self.get_ticket_detail(ticket))
+            except:
+                info = activity.name + self.user.student_id
+                unique_id = str(uuid.uuid1()) + info
+                ticket = Ticket.objects.create(activity_id=activity.id, student_id=self.user.student_id,
+                                               unique_id=unique_id, status=Ticket.STATUS_VALID)
+                activity.remain_tickets -= 1
+                activity.save()
+                return self.reply_single_news(self.get_ticket_detail(ticket))
