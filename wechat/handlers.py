@@ -132,7 +132,7 @@ class CheckTicketHandler(WeChatHandler):
 class TakeTicketHandler(WeChatHandler):
 
     def check(self):
-        self.is_text_command("取票")
+        return self.is_text_command("取票")
 
     def handle(self):
         if not self.user.student_id:
@@ -224,7 +224,7 @@ class RefundHandler(WeChatHandler):
             except:
                 return self.reply_text("未查询到相关活动")
             try:
-                ticket = Ticket.objects.get(activity=activity,student_id=self.user.student_id)
+                ticket = Ticket.objects.get(activity=activity, student_id=self.user.student_id)
             except:
                 return self.reply_text("您没有此活动的票")
             if ticket.status == Ticket.STATUS_USED:
