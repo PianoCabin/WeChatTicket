@@ -481,7 +481,6 @@ class Test_activity_detail(TestCase):
         self.client.post('/api/a/login', {"username": self.username, "password": self.password})
 
         response = self.client.get('/api/a/activity/list')
-        print(response.json())
         # 获取已有活动详情
         response = self.client.get('/api/a/activity/detail', {"id": 13})
         self.assertEqual(response.json()['code'], 0)
