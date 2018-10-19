@@ -24,7 +24,6 @@ class CustomWeChatView(WeChatView):
         'book_empty': 'BOOKING_EMPTY',
         'book_header': 'BOOKING_ACTIVITY_',
     }
-
     menu = {
         'button': [
             {

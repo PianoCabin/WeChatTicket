@@ -9,6 +9,7 @@ from WeChatTicket.settings import *
 DefaultUser = get_user_model()
 
 
+
 # Create your tests here.
 class ImageUploadTest(TestCase):
 
