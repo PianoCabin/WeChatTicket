@@ -13,17 +13,15 @@ class UnBindTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.open_id_1="asdfghjjl"
-        cls.student_id_1="2016014234"
-        cls.open_id_2="qwertyuiop"
-        User.objects.create(open_id=cls.open_id_1,student_id=cls.student_id_1)
+        cls.open_id_1 = "asdfghjjl"
+        cls.student_id_1 = "2016014234"
+        cls.open_id_2 = "qwertyuiop"
+        User.objects.create(open_id=cls.open_id_1, student_id=cls.student_id_1)
         User.objects.create(open_id=cls.open_id_2)
         cls.textMsg = {'ToUserName': 'TestName', 'FromUserName': cls.open_id_1, 'Content': '解绑'}
-        pass
 
     def setUp(self):
         self.client = Client()
-        pass
 
     def test_unbind(self):
         # test user who has bind
@@ -41,7 +39,6 @@ class UnBindTest(TestCase):
         content = xmltodict.parse(response.content)['xml']['Content'][0:9]
         answer = '学号绑定已经解除。'
         self.assertEqual(content, answer)
-        pass
 
 
 class BindTest(TestCase):
@@ -54,11 +51,9 @@ class BindTest(TestCase):
         User.objects.create(open_id=cls.open_id_2)
         cls.clickMsg = {'ToUserName': 'TestName', 'FromUserName': cls.open_id_1, 'EventKey': 'SERVICE_BIND'}
         cls.textMsg = {'ToUserName': 'TestName', 'FromUserName': cls.open_id_1, 'Content': '绑定'}
-        pass
 
     def setUp(self):
         self.client = Client()
-        pass
 
     def test_bind(self):
         # test user unbind with textMsg
@@ -96,7 +91,6 @@ class BindTest(TestCase):
         content = xmltodict.parse(response.content)['xml']['Content'][0:8]
         answer = '您已经绑定了学号'
         self.assertEqual(content, answer)
-        pass
 
 
 class BookEmptyTest(TestCase):
@@ -113,7 +107,7 @@ class BookEmptyTest(TestCase):
         self.client = Client()
 
     def test_book(self):
-        #test correct input
+        # test correct input
         msg = get_template('sendclick.xml').render(self.clickMsg)
         response = self.client.post('/wechat', msg, content_type='application/xml')
         self.assertEqual(response.status_code, 200)
@@ -128,22 +122,31 @@ class BookWhatTest(TestCase):
         cls.open_id_1 = "asdfghjjl"
         cls.student_id_1 = "2016014234"
         cls.clickMsg = {'ToUserName': 'TestName', 'FromUserName': cls.open_id_1, 'EventKey': 'SERVICE_BOOK_WHAT'}
-        cls.start_time1 = timezone.datetime(year=2018,month=11,day=1,hour=0,minute=0,second=0)
-        cls.start_time2 = timezone.datetime(year=2018,month=12,day=1,hour=0,minute=0,second=0)
-        cls.book_start = timezone.datetime(year=2018,month=10,day=1,hour=0,minute=0,second=0)
-        cls.end_time1 = timezone.datetime(year=2018,month=12,day=1,hour=0,minute=0,second=0)
-        cls.end_time2 = timezone.datetime(year=2018,month=12,day=30,hour=0,minute=0,second=0)
-        cls.book_end = timezone.datetime(year=2018,month=10,day=25,hour=0,minute=0,second=0)
-        act1 = Activity.objects.create(name="test1",key="test1",description="test1",start_time=cls.start_time1,end_time=cls.end_time1,book_start=cls.book_start,book_end=cls.book_end,total_tickets=100,remain_tickets=100,status=Activity.STATUS_PUBLISHED,pic_url="")
-        act4 = Activity.objects.create(name="test1",key="test1",description="test1",start_time=cls.start_time2,end_time=cls.end_time2,book_start=cls.book_start,book_end=cls.book_end,total_tickets=100,remain_tickets=100,status=Activity.STATUS_PUBLISHED,pic_url="")
-        act2 = Activity.objects.create(name="test1",key="test1",description="test1",start_time=cls.start_time1,end_time=cls.end_time1,book_start=cls.book_start,book_end=cls.book_end,total_tickets=100,remain_tickets=100,status=Activity.STATUS_DELETED,pic_url="")
-        act3 = Activity.objects.create(name="test1",key="test1",description="test1",start_time=cls.start_time1,end_time=cls.end_time1,book_start=cls.book_start,book_end=cls.book_end,total_tickets=100,remain_tickets=100,status=Activity.STATUS_SAVED,pic_url="")
+        cls.start_time1 = timezone.datetime(year=2018, month=11, day=1, hour=0, minute=0, second=0)
+        cls.start_time2 = timezone.datetime(year=2018, month=12, day=1, hour=0, minute=0, second=0)
+        cls.book_start = timezone.datetime(year=2018, month=10, day=1, hour=0, minute=0, second=0)
+        cls.end_time1 = timezone.datetime(year=2018, month=12, day=1, hour=0, minute=0, second=0)
+        cls.end_time2 = timezone.datetime(year=2018, month=12, day=30, hour=0, minute=0, second=0)
+        cls.book_end = timezone.datetime(year=2018, month=10, day=25, hour=0, minute=0, second=0)
+        act1 = Activity.objects.create(name="test1", key="test1", description="test1", start_time=cls.start_time1,
+                                       end_time=cls.end_time1, book_start=cls.book_start, book_end=cls.book_end,
+                                       total_tickets=100, remain_tickets=100, status=Activity.STATUS_PUBLISHED,
+                                       pic_url="")
+        act4 = Activity.objects.create(name="test1", key="test1", description="test1", start_time=cls.start_time2,
+                                       end_time=cls.end_time2, book_start=cls.book_start, book_end=cls.book_end,
+                                       total_tickets=100, remain_tickets=100, status=Activity.STATUS_PUBLISHED,
+                                       pic_url="")
+        act2 = Activity.objects.create(name="test1", key="test1", description="test1", start_time=cls.start_time1,
+                                       end_time=cls.end_time1, book_start=cls.book_start, book_end=cls.book_end,
+                                       total_tickets=100, remain_tickets=100, status=Activity.STATUS_DELETED,
+                                       pic_url="")
+        act3 = Activity.objects.create(name="test1", key="test1", description="test1", start_time=cls.start_time1,
+                                       end_time=cls.end_time1, book_start=cls.book_start, book_end=cls.book_end,
+                                       total_tickets=100, remain_tickets=100, status=Activity.STATUS_SAVED, pic_url="")
         User.objects.create(open_id=cls.open_id_1, student_id=cls.student_id_1)
-        pass
 
     def setUp(self):
         self.client = Client()
-        pass
 
     def test_bookWhat(self):
 
@@ -168,8 +171,8 @@ class BookWhatTest(TestCase):
         self.assertEqual(response.status_code, 200)
         content = xmltodict.parse(response.content)['xml']['Content']
         self.assertEqual(content, '当前活动尚不可抢票')
-        pass
-# Create your tests here.
+
+
 class NonFunctionalHandlerTest(TestCase):
     # Test for help handler
     @classmethod
