@@ -213,6 +213,8 @@ class RefundHandler(WeChatHandler):
 
     def handle(self):
         with transaction.atomic():
+            if not self.user.student_id:
+                return self.reply_text("未绑定学号")
             key = re.match(r'退票\s([\s\S]+)', self.input['Content'], re.DOTALL)
             if (key == None):
                 return self.reply_text("请按格式输入：退票 活动代称")
