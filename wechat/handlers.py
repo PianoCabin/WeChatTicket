@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.db import transaction
 import uuid
 
-__author__ = "PianoCabin"
+__author__ = "Venessa, PianoCabin"
 
 
 class ErrorHandler(WeChatHandler):
@@ -74,7 +74,6 @@ class BookEmptyHandler(WeChatHandler):
         return self.reply_text(self.get_message('book_empty'))
 
 
-# begin to add handler
 class BookWhatHandler(WeChatHandler):
 
     def check(self):
@@ -130,10 +129,38 @@ class CheckTicketHandler(WeChatHandler):
         return self.reply_news(articles)
 
 
+class TakeTicketHandler(WeChatHandler):
+
+    def check(self):
+        return self.is_text_command("取票")
+
+    def handle(self):
+        if not self.user.student_id:
+            return self.reply_text("请先绑定姓名学号")
+
+        key = self.input['Content'][3:]
+
+        try:
+            activity = Activity.objects.get(key=key, status=Activity.STATUS_PUBLISHED)
+            ticket = Ticket.objects.get(student_id=self.user.student_id, status=Ticket.STATUS_VALID, activity_id=activity.id)
+            if ticket:
+                calibration_begintime = (activity.start_time + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
+                messages = {
+                    'Title': activity.name,
+                    'Description': '开始时间：' + calibration_begintime + '\n地点：' + activity.place,
+                    'PicUrl': activity.pic_url,
+                    'Url': settings.get_url("/u/ticket/", {"openid": self.user.open_id, "ticket": ticket.unique_id}),
+                }
+                return self.reply_single_news(messages)
+            return self.reply_text("抱歉，您并没有该活动的门票")
+        except:
+            return self.reply_text("抱歉，您并没有该活动的门票")
+
+
 class BookTicketHandler(WeChatHandler):
 
     def check(self):
-        return self.is_text_command("抢票") or (self.is_msg_type('event') and (self.input['Event'] == 'CLICK') \
+        return self.is_text_command("抢票") or (self.is_msg_type('event') and (self.input['Event'] == 'CLICK')
                                               and (re.match("BOOKING_ACTIVITY_[0-9]+$", self.input['EventKey'])))
 
     def handle(self):
@@ -153,7 +180,6 @@ class BookTicketHandler(WeChatHandler):
                     return self.reply_text("未查询到相关活动")
             else:
                 id = re.match("BOOKING_ACTIVITY_([0-9]+)$", self.input['EventKey']).group(1)
-                print(id)
                 try:
                     activity = Activity.objects.get(id=id)
                 except:
@@ -169,7 +195,7 @@ class BookTicketHandler(WeChatHandler):
             try:
                 ticket = Ticket.objects.get(activity_id=activity.id, student_id=self.user.student_id,
                                             status__gt=Ticket.STATUS_CANCELLED)
-                return self.reply_single_news(self.get_ticket_detail(ticket))
+                return self.reply_text("您好，您已经有该活动的票，请点击查票查询电子票详情")
             except:
                 info = activity.name + self.user.student_id
                 unique_id = str(uuid.uuid1()) + info
@@ -178,3 +204,40 @@ class BookTicketHandler(WeChatHandler):
                 activity.remain_tickets -= 1
                 activity.save()
                 return self.reply_single_news(self.get_ticket_detail(ticket))
+
+
+class RefundHandler(WeChatHandler):
+    def check(self):
+        return self.is_text_command("退票")
+
+    def handle(self):
+        if not self.user.student_id:
+            return self.reply_text("未绑定学号")
+        with transaction.atomic():
+            key = re.match(r'退票\s([\s\S]+)', self.input['Content'], re.DOTALL)
+            if key is None:
+                return self.reply_text("请按格式输入：退票 活动代称")
+            key = key.group(1)
+            activity = None
+            ticket = None
+            try:
+                activity = Activity.objects.get(key=key)
+            except:
+                return self.reply_text("未查询到相关活动")
+            try:
+                ticket = Ticket.objects.get(activity=activity, student_id=self.user.student_id)
+            except:
+                return self.reply_text("您没有此活动的票")
+            if ticket.status == Ticket.STATUS_USED:
+                return self.reply_text("您的票已经使用，不可退票")
+            if ticket.status == Ticket.STATUS_CANCELLED:
+                return self.reply_text("您的票已经取消，不可退票")
+            if ticket.activity.start_time < timezone.now() + timedelta(minutes=45):
+                return self.reply_text("只能在活动开始45分钟前退票")
+            ticket.status = Ticket.STATUS_CANCELLED
+            ticket.save()
+            ticket.activity.remain_tickets +=1
+            ticket.activity.save()
+            ticket.delete()
+            return self.reply_text("退票成功!")
+

@@ -87,25 +87,6 @@ class WeChatHandler(object):
     def url_bind(self):
         return settings.get_url('u/bind', {'openid': self.user.open_id})
 
-    def get_ticket_by_student_id_and_activity_id(self, activity, include_used):
-        if include_used:
-            tickets = Ticket.objects.filter(student_id=self.user.student_id).exclude(status=Ticket.STATUS_CANCELLED)
-        else:
-            tickets = Ticket.objects.filter(student_id=self.user.student_id, status=Ticket.STATUS_VALID)
-        for ticket in tickets:
-            if ticket.activity.id == activity.id:
-                return ticket
-        return None
-
-    def get_activity_detail(self, activity):
-        result = {
-            'Title': activity.name,
-            'Description': activity.description,
-            'PicUrl': activity.pic_url,
-            'Url': settings.get_url("/u/activity/", {"id": activity.id}),
-        }
-        return result
-
     def get_ticket_detail(self, ticket):
         activity = ticket.activity
         description = '活动时间：' + (activity.start_time + datetime.timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S") + \
@@ -183,7 +164,6 @@ class WeChatLib(object):
     @classmethod
     def get_wechat_access_token(cls):
         if datetime.datetime.now() >= cls.access_token_expire:
-            print("appid=%s secret=%s" % (cls.appid, cls.secret))
             res = cls._http_get(
                 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=%s&secret=%s' % (
                     cls.appid, cls.secret

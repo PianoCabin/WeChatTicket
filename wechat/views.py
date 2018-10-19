@@ -11,7 +11,7 @@ class CustomWeChatView(WeChatView):
 
     handlers = [
         HelpOrSubscribeHandler, UnbindOrUnsubscribeHandler, BindAccountHandler, BookEmptyHandler, BookWhatHandler,
-        CheckTicketHandler, BookTicketHandler
+        CheckTicketHandler, TakeTicketHandler, BookTicketHandler, RefundHandler
     ]
     error_message_handler = ErrorHandler
     default_handler = DefaultHandler
@@ -24,7 +24,6 @@ class CustomWeChatView(WeChatView):
         'book_empty': 'BOOKING_EMPTY',
         'book_header': 'BOOKING_ACTIVITY_',
     }
-
     menu = {
         'button': [
             {
