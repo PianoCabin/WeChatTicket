@@ -3,7 +3,7 @@ from codex.baseview import APIView
 
 from django.contrib import auth
 from wechat import models
-from wechat.models import Activity, Ticket
+from wechat.models import *
 from django.utils import timezone
 from wechat.views import CustomWeChatView
 import uuid
@@ -260,9 +260,9 @@ class CheckIn(APIView):
         ticket = None
         try:
             if studentId != None:
-                ticket = Ticket.objects.get(studentId=studentId)
+                ticket = Ticket.objects.get(student_id=studentId, activity_id=self.input['actId'])
             else:
-                ticket = Ticket.objects.get(unique_id=unique_id)
+                ticket = Ticket.objects.get(unique_id=unique_id, activity_id=self.input['actId'])
         except:
             raise ValidateError("invalid Ticket")
         if ticket.status == Ticket.STATUS_USED:
