@@ -3,7 +3,7 @@ from codex.baseview import APIView
 
 from django.contrib import auth
 from wechat import models
-from wechat.models import *
+from wechat.models import Activity, Ticket
 from django.utils import timezone
 from wechat.views import CustomWeChatView
 import uuid
