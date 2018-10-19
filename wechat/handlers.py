@@ -142,14 +142,14 @@ class TakeTicketHandler(WeChatHandler):
 
         try:
             activity = Activity.objects.get(key=key, status=Activity.STATUS_PUBLISHED)
-            ticket = Ticket.objects.filter(student_id=self.user.student_id, status=Ticket.STATUS_VALID, activity_id=activity.id)
+            ticket = Ticket.objects.get(student_id=self.user.student_id, status=Ticket.STATUS_VALID, activity_id=activity.id)
             if ticket:
                 calibration_begintime = (activity.start_time + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
                 messages = {
                     'Title': activity.name,
                     'Description': '开始时间：' + calibration_begintime + '\n地点：' + activity.place,
                     'PicUrl': activity.pic_url,
-                    'Url': settings.get_url("/u/activity/", {"id": activity.id}),
+                    'Url': settings.get_url("/u/ticket/", {"openid": self.user.open_id, "ticket": ticket.unique_id}),
                 }
                 return self.reply_single_news(messages)
             return self.reply_text("抱歉，您并没有该活动的门票")
@@ -160,7 +160,7 @@ class TakeTicketHandler(WeChatHandler):
 class BookTicketHandler(WeChatHandler):
 
     def check(self):
-        return self.is_text_command("抢票") or (self.is_msg_type('event') and (self.input['Event'] == 'CLICK') \
+        return self.is_text_command("抢票") or (self.is_msg_type('event') and (self.input['Event'] == 'CLICK')
                                               and (re.match("BOOKING_ACTIVITY_[0-9]+$", self.input['EventKey'])))
 
     def handle(self):
@@ -180,7 +180,6 @@ class BookTicketHandler(WeChatHandler):
                     return self.reply_text("未查询到相关活动")
             else:
                 id = re.match("BOOKING_ACTIVITY_([0-9]+)$", self.input['EventKey']).group(1)
-                print(id)
                 try:
                     activity = Activity.objects.get(id=id)
                 except:
@@ -212,9 +211,11 @@ class RefundHandler(WeChatHandler):
         return self.is_text_command("退票")
 
     def handle(self):
+        if not self.user.student_id:
+            return self.reply_text("未绑定学号")
         with transaction.atomic():
             key = re.match(r'退票\s([\s\S]+)', self.input['Content'], re.DOTALL)
-            if (key == None):
+            if key is None:
                 return self.reply_text("请按格式输入：退票 活动代称")
             key = key.group(1)
             activity = None
