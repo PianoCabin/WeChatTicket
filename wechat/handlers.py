@@ -142,19 +142,19 @@ class TakeTicketHandler(WeChatHandler):
 
         try:
             activity = Activity.objects.get(key=key, status=Activity.STATUS_PUBLISHED)
-            ticket = Ticket.objects.filter(student_id=self.user.student_id, status=Ticket.STATUS_VALID, activity_id=activity.id)
+            ticket = Ticket.objects.get(student_id=self.user.student_id, status=Ticket.STATUS_VALID, activity_id=activity.id)
             if ticket:
                 calibration_begintime = (activity.start_time + timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S")
                 messages = {
                     'Title': activity.name,
                     'Description': '开始时间：' + calibration_begintime + '\n地点：' + activity.place,
                     'PicUrl': activity.pic_url,
-                    'Url': settings.get_url("/u/activity/", {"id": activity.id}),
+                    'Url': settings.get_url("/u/ticket/", {"openid": self.user.open_id, "ticket": ticket.unique_id}),
                 }
                 return self.reply_single_news(messages)
-            return self.reply_text("抱歉，您并没有该活动的门票")
+            return self.reply_text("抱歉，您并没有该活动的门票1")
         except:
-            return self.reply_text("抱歉，您并没有该活动的门票")
+            return self.reply_text("抱歉，您并没有该活动的门票2")
 
 
 class BookTicketHandler(WeChatHandler):
@@ -180,7 +180,7 @@ class BookTicketHandler(WeChatHandler):
                     return self.reply_text("未查询到相关活动")
             else:
                 id = re.match("BOOKING_ACTIVITY_([0-9]+)$", self.input['EventKey']).group(1)
-                print(id)
+                # print(id)
                 try:
                     activity = Activity.objects.get(id=id)
                 except:

@@ -219,14 +219,14 @@ class ActivityMenu(APIView):
                     activity_ids.append(int(activity_id))
         actList = Activity.objects.filter(status=Activity.STATUS_PUBLISHED, book_end__gt=timezone.now(),
                                           book_start__lt=timezone.now())
-        print(activity_ids)
+        # print(activity_ids)
         infos = []
         for act in actList:
             info = {"id": act.id, "name": act.name, "menuIndex": 0}
             infos.append(info)
         for info in infos:
             if info['id'] in activity_ids:
-                print('here')
+                # print('here')
                 info['menuIndex'] = activity_ids.index(info['id'])+1
         return infos
 
@@ -245,7 +245,7 @@ class ActivityMenu(APIView):
                 activityList.append(act)
             except:
                 raise ValidateError("no such activity")
-        print(activityList)
+        # print(activityList)
         CustomWeChatView.update_menu(activityList)
 
 
