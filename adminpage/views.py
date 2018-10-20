@@ -225,7 +225,7 @@ class ActivityMenu(APIView):
             infos.append(info)
         for info in infos:
             if info['id'] in activity_ids:
-                info['menuIndex'] = activity_ids.index(info['id'])+1
+                info['menuIndex'] = activity_ids.index(info['id']) + 1
         return infos
 
     def post(self):
@@ -260,9 +260,9 @@ class CheckIn(APIView):
         ticket = None
         try:
             if studentId != None:
-                ticket = Ticket.objects.get(studentId=studentId)
+                ticket = Ticket.objects.get(student_id=studentId, activity_id=self.input['actId'])
             else:
-                ticket = Ticket.objects.get(unique_id=unique_id)
+                ticket = Ticket.objects.get(unique_id=unique_id, activity_id=self.input['actId'])
         except:
             raise ValidateError("invalid Ticket")
         if ticket.status == Ticket.STATUS_USED:
@@ -273,4 +273,3 @@ class CheckIn(APIView):
         ticket.save()
         info = {"ticket": ticket.unique_id, "studentId": ticket.student_id}
         return info
-
