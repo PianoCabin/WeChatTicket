@@ -173,6 +173,76 @@ class BookWhatTest(TestCase):
         self.assertEqual(content, '当前活动尚不可抢票')
 
 
+class CheckTicketTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        pass
+        cls.open_id_1 = "asdfghjjl"
+        cls.student_id_1 = "2016014234"
+        cls.open_id_2 = "zxcvbn"
+        cls.student_id_2 = "2016014235"
+        cls.open_id_3 = "dkfjghl"
+
+        cls.clickMsg = {'ToUserName': 'TestName', 'FromUserName': cls.open_id_1, 'EventKey': 'SERVICE_GET_TICKET'}
+        cls.start_time1 = timezone.datetime(year=2018, month=11, day=1, hour=0, minute=0, second=0)
+        cls.start_time2 = timezone.datetime(year=2018, month=12, day=1, hour=0, minute=0, second=0)
+        cls.book_start = timezone.datetime(year=2018, month=10, day=1, hour=0, minute=0, second=0)
+        cls.end_time1 = timezone.datetime(year=2018, month=12, day=1, hour=0, minute=0, second=0)
+        cls.end_time2 = timezone.datetime(year=2018, month=12, day=30, hour=0, minute=0, second=0)
+        cls.book_end = timezone.datetime(year=2018, month=10, day=25, hour=0, minute=0, second=0)
+        act1 = Activity.objects.create(name="test1", key="test1", description="test1", start_time=cls.start_time1,
+                                       end_time=cls.end_time1, book_start=cls.book_start, book_end=cls.book_end,
+                                       total_tickets=100, remain_tickets=100, status=Activity.STATUS_PUBLISHED,
+                                       pic_url="")
+        act4 = Activity.objects.create(name="test1", key="test1", description="test1", start_time=cls.start_time2,
+                                       end_time=cls.end_time2, book_start=cls.book_start, book_end=cls.book_end,
+                                       total_tickets=100, remain_tickets=100, status=Activity.STATUS_PUBLISHED,
+                                       pic_url="")
+        ticket1 = Ticket.objects.create(activity_id=act1.id, student_id=cls.student_id_1, status=Ticket.STATUS_VALID,
+                                        unique_id="a")
+        ticket2 = Ticket.objects.create(activity_id=act4.id, student_id=cls.student_id_1, status=Ticket.STATUS_VALID,
+                                        unique_id="b")
+        User.objects.create(open_id=cls.open_id_1, student_id=cls.student_id_1)
+        User.objects.create(open_id=cls.open_id_2, student_id=cls.student_id_2)
+        User.objects.create(open_id=cls.open_id_3)
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_check(self):
+        # test unbind
+        # test default handler
+        self.clickMsg["FromUserName"] = self.open_id_3
+        msg = get_template('sendclick.xml').render(self.clickMsg)
+        response = self.client.post('/wechat', msg, content_type='application/xml')
+        self.assertEqual(response.status_code, 200)
+        content = xmltodict.parse(response.content)['xml']['Content']
+        self.assertEqual(content, '您还没有绑定，绑定后才可使用该功能')
+
+        # test no Ticket
+        self.clickMsg["FromUserName"] = self.open_id_2
+        msg = get_template('sendclick.xml').render(self.clickMsg)
+        response = self.client.post('/wechat', msg, content_type='application/xml')
+        self.assertEqual(response.status_code, 200)
+        content = xmltodict.parse(response.content)['xml']['Content']
+        self.assertEqual(content, '当前没有已购的票, 您可点击菜单栏中“抢啥”查看现有活动')
+
+        # test user with tickets
+        self.clickMsg["FromUserName"] = self.open_id_1
+        msg = get_template('sendclick.xml').render(self.clickMsg)
+        response = self.client.post('/wechat', msg, content_type='application/xml')
+        self.assertEqual(response.status_code, 200)
+        content = xmltodict.parse(response.content)['xml']["Articles"]['item']
+        return_titles = []
+        for article in content:
+            return_titles.append(article['Title'])
+        tickets = Ticket.objects.filter(status=Ticket.STATUS_VALID, student_id=self.student_id_1)
+        an_titles = []
+        for tic in tickets:
+            an_titles.append(tic.activity.name)
+        self.assertEqual(return_titles, an_titles)
+
+
 class NonFunctionalHandlerTest(TestCase):
     # Test for help handler
     @classmethod
