@@ -11,7 +11,11 @@ class UserBind(APIView):
     def validate_user(self):
         if (re.match(r'[0-9]{10}', self.input["student_id"]) == None):
             raise ValidateError("invalid Student_id")
-        pass
+        try:
+            User.objects.get(student_id=self.input['student_id'])
+            raise ValidateError('Duplicate student ID')
+        except:
+            pass
         # raise NotImplementedError('You should implement UserBind.validate_user method')
 
     def get(self):
